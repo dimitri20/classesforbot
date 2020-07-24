@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>wikipedia API</title>
+</head>
+<body>
+
+ <ul>
+ 	{% for result in results %}
+ 	<li style="margin: 50px;">
+ 		<div>
+ 			<div>Title: {{ result["title"] }}</div>
+ 			{{ result["snippet"] }}
+ 		</div>
+ 	</li>
+ 	{% endfor %}
+ </ul>
+ 	
+
+</body>
+</html>
