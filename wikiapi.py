@@ -1,4 +1,6 @@
 import wikipediaapi
+import requests
+
 
 
 class Sections():
@@ -15,12 +17,38 @@ class Sections():
 
 
 class Wikipedia():
-	def __init__(self, lang, query):
+	def __init__(self, lang):
 		self.lang = lang
+		self.query = ''
+		self.url = "https://en.wikipedia.org/w/api.php?"
+
+	def search(self, query, limit=10):
 		self.query = query
 
+		jsonParameters = {
+		    "action": "query",
+		    "format": "json",
+		    "list": "search",
+		    "srsearch": self.query
+		}
 
-	def result(self, html=False, lang='default'):
+		res = requests.Session().get(self.url, params=jsonParameters)
+
+		if res.status_code != 200:
+		    raise Exception("ERROR: API request unsuccessful.")
+
+		data = res.json()
+		data = data["query"]["search"]
+
+		result = []
+		for item in data:
+			result.append(item["title"])
+
+
+		return result
+
+
+	def makeRequest(self,query, html=False, lang='default'):
 		if html:
 			wiki = wikipediaapi.Wikipedia(
 					language=self.lang,
@@ -32,7 +60,7 @@ class Wikipedia():
 					extract_format=wikipediaapi.ExtractFormat.WIKI
 				)
 
-		page = wiki.page(self.query)
+		page = wiki.page(query)
 		if lang != 'default':
 			page = page.langlinks[lang]
 
@@ -58,13 +86,39 @@ class Wikipedia():
 		return final_result
 
 
+class WolframAlpha():
+	def __init__(self):
+		self.appID = '9VXTX4-J7ATP4GJPR'
+		self.url = 'http://api.wolframalpha.com/v2/query?'
+
+	def makeRequest(self, query):
+		jsonParameters = {
+			'appid' : self.appID,
+			'output' : 'json',
+			'input' : query,
+			'format' : 'plaintext',
+			'translation' : 'true'
+		}
+
+		request = requests.Session().get(self.url, params = jsonParameters)
+		session = request.json()['queryresult']['pods']
+
+		final_plaintexts = {}
+
+		if request.status_code != 200:
+			raise Exception("Error was occured when loading the page.")
+
+		for j in session:
+			if len(j['subpods'][0]['plaintext']) != 0:
+				final_plaintexts[[j][0]['title']] = j['subpods'][0]['plaintext']
+
+
+		return final_plaintexts
+
 
 
 if __name__ == '__main__':
-	obj = Wikipedia(query="Albert Einstein", lang='en') 
-	print(obj.result()["sectionTitles"])
-	inp = input("Enter title")
-	print(obj.result()["fullSections"][inp])
+	pass
 
 
 
